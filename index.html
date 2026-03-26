@@ -382,16 +382,90 @@
     @media (max-width: 900px) {
       .sidebar { width: 60px; }
       .brand-name, .brand-sub, .nav-item span { display: none; }
-      .main, .main #loading-screen { margin-left: 60px; }
+      .main { margin-left: 60px; }
+      #loading-screen { margin-left: 60px; }
       .metrics { grid-template-columns: 1fr 1fr; }
       .form-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── MOBILE (bottom nav, card tables) ── */
     @media (max-width: 600px) {
-      .metrics { grid-template-columns: 1fr; }
+      /* Esconde sidebar, mostra bottom nav */
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding-bottom: 70px; }
+      #loading-screen { margin-left: 0; }
+
+      /* Bottom navigation */
+      .bottom-nav {
+        display: flex !important;
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: var(--charcoal);
+        border-top: 1px solid #2e2e2e;
+        z-index: 100;
+        height: 62px;
+      }
+      .bottom-nav-item {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 3px; cursor: pointer;
+        color: #666; font-size: 10px;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        border: none; background: transparent;
+        transition: color 0.2s;
+      }
+      .bottom-nav-item.active { color: var(--gold-light); }
+      .bottom-nav-item .nav-icon { font-size: 20px; }
+
+      /* Topbar mobile */
+      .topbar { padding: 0.9rem 1rem; }
+      .page-title { font-size: 20px; }
+
+      /* Metrics */
+      .metrics { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .metric-value { font-size: 26px; }
+
+      /* Content */
+      .content { padding: 0.9rem; }
       .form-grid { grid-template-columns: 1fr; }
-      .content { padding: 1rem; }
-      table { font-size: 11px; }
-      td, th { padding: 8px; }
+      .form-card { padding: 1rem; }
+      .table-card-header { padding: 0.8rem 1rem; }
+
+      /* Esconde tabela, mostra cards mobile */
+      .desktop-table { display: none !important; }
+      .mobile-cards { display: block !important; }
+
+      /* Card de item mobile */
+      .m-card {
+        border-bottom: 1px solid var(--border);
+        padding: 0.9rem 1rem;
+        display: flex; flex-direction: column; gap: 8px;
+      }
+      .m-card:last-child { border-bottom: none; }
+      .m-card-top { display: flex; gap: 12px; align-items: flex-start; }
+      .m-card-info { flex: 1; }
+      .m-card-name { font-weight: 500; font-size: 14px; }
+      .m-card-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+      .m-card-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .m-chip {
+        font-size: 11px; padding: 2px 8px;
+        border: 1px solid var(--border); border-radius: 2px;
+        color: var(--muted); letter-spacing: 0.05em;
+      }
+      .m-price { font-size: 15px; font-weight: 500; }
+      .m-card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+
+      /* Card de pedido mobile */
+      .m-order-card {
+        border-bottom: 1px solid var(--border);
+        padding: 0.9rem 1rem;
+      }
+      .m-order-card:last-child { border-bottom: none; }
+      .m-order-name { font-weight: 500; font-size: 14px; }
+      .m-order-meta { font-size: 12px; color: var(--muted); margin: 3px 0 8px; }
+      .m-order-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+      .gold-btn { padding: 10px 18px; font-size: 13px; width: 100%; text-align: center; }
+      .form-row { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -416,6 +490,16 @@
       <div id="save-status"></div>
     </div>
   </aside>
+
+  <!-- BOTTOM NAV (mobile only) -->
+  <nav class="bottom-nav" style="display:none">
+    <button class="bottom-nav-item active" onclick="switchTabMobile('inventario',this)" data-tab="inventario">
+      <span class="nav-icon">🪙</span>Inventário
+    </button>
+    <button class="bottom-nav-item" onclick="switchTabMobile('pedidos',this)" data-tab="pedidos">
+      <span class="nav-icon">📦</span>Pedidos
+    </button>
+  </nav>
 
   <!-- LOADING -->
   <div id="loading-screen">
@@ -498,7 +582,7 @@
             <div class="table-card-title">Estoque Atual</div>
             <div id="inv-count" style="font-size:12px;color:var(--muted);letter-spacing:0.06em"></div>
           </div>
-          <table>
+          <table class="desktop-table">
             <thead>
               <tr>
                 <th>Foto</th><th>Peça</th><th>Categoria</th>
@@ -508,6 +592,7 @@
             </thead>
             <tbody id="inv-body"></tbody>
           </table>
+          <div id="inv-mobile-cards" class="mobile-cards" style="display:none"></div>
           <div class="empty-state" id="inv-empty" style="display:none">
             <div class="empty-gem">💎</div>
             Nenhuma peça cadastrada ainda.<br>Adicione sua primeira peça acima.
@@ -556,12 +641,13 @@
             <div class="table-card-title">Aguardando Retirada</div>
             <div id="pending-count" style="font-size:12px;color:var(--muted);letter-spacing:0.06em"></div>
           </div>
-          <table>
+          <table class="desktop-table">
             <thead>
               <tr><th>Cliente</th><th>Peça</th><th>Qtd</th><th>Valor</th><th>Status</th><th>Telefone</th><th>Observações</th><th>Ações</th></tr>
             </thead>
             <tbody id="ord-pending-body"></tbody>
           </table>
+          <div id="ord-pending-mobile" class="mobile-cards" style="display:none"></div>
           <div class="empty-state" id="ord-pending-empty" style="display:none">
             <div class="empty-gem">📦</div>
             Nenhum pedido aguardando retirada.
@@ -572,12 +658,13 @@
           <div class="table-card-header">
             <div class="table-card-title">Histórico de Retiradas</div>
           </div>
-          <table>
+          <table class="desktop-table">
             <thead>
               <tr><th>Cliente</th><th>Peça</th><th>Qtd</th><th>Valor</th><th>Telefone</th><th>Observações</th><th>Data</th></tr>
             </thead>
             <tbody id="ord-done-body"></tbody>
           </table>
+          <div id="ord-done-mobile" class="mobile-cards" style="display:none"></div>
           <div class="empty-state" id="ord-done-empty" style="display:none">
             <div class="empty-gem">✨</div>
             Nenhuma retirada registrada ainda.
@@ -689,15 +776,29 @@
       if (window._saveToCloud) window._saveToCloud(d);
     }
 
+    function isMobile() { return window.innerWidth <= 600; }
+
     function switchTab(name, el) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
-      el.classList.add('active');
+      if (el) el.classList.add('active');
       const titles = { inventario: ['Inventário','Gerencie seu estoque de peças'], pedidos: ['Pedidos','Acompanhe seus pedidos e retiradas'] };
       document.getElementById('page-title').textContent    = titles[name][0];
       document.getElementById('page-subtitle').textContent = titles[name][1];
       if (name === 'pedidos') populateOrderItemSelect();
+    }
+
+    function switchTabMobile(name, el) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      if (el) el.classList.add('active');
+      const titles = { inventario: ['Inventário','Gerencie seu estoque de peças'], pedidos: ['Pedidos','Acompanhe seus pedidos e retiradas'] };
+      document.getElementById('page-title').textContent    = titles[name][0];
+      document.getElementById('page-subtitle').textContent = titles[name][1];
+      if (name === 'pedidos') populateOrderItemSelect();
+      window.scrollTo(0,0);
     }
 
     function previewImage(event) {
@@ -747,11 +848,48 @@
 
     function renderInventory() {
       const tbody = document.getElementById('inv-body');
+      const mCards = document.getElementById('inv-mobile-cards');
       const empty = document.getElementById('inv-empty');
       const count = document.getElementById('inv-count');
-      if (items.length === 0) { empty.style.display = 'block'; tbody.innerHTML = ''; count.textContent = ''; return; }
+      if (items.length === 0) { empty.style.display = 'block'; tbody.innerHTML = ''; mCards.innerHTML = ''; count.textContent = ''; return; }
       empty.style.display = 'none';
       count.textContent = items.length + (items.length === 1 ? ' peça' : ' peças');
+      // Mobile cards
+      mCards.innerHTML = items.map(it => {
+        const avail = available(it);
+        const profit = it.price - (it.cost ?? 0);
+        const aCls = avail === 0 ? 'avail-out' : avail <= 1 ? 'avail-low' : 'avail-ok';
+        const pCls = profit > 0 ? 'profit-pos' : profit < 0 ? 'profit-neg' : 'profit-neu';
+        return `<div class="m-card">
+          <div class="m-card-top">
+            ${it.img ? `<img src="${it.img}" onclick="openModal(${it.id})" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;flex-shrink:0">` : `<div style="width:56px;height:56px;border-radius:6px;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">💍</div>`}
+            <div class="m-card-info">
+              <div class="m-card-name">${it.name}</div>
+              ${it.desc ? `<div class="m-card-desc">${it.desc}</div>` : ''}
+              <div class="m-card-row" style="margin-top:6px">
+                <span class="m-chip">${it.cat}</span>
+                <span class="${aCls}" style="font-size:12px;font-weight:500">● ${avail} disp.</span>
+                ${it.reserved > 0 ? `<span style="font-size:12px;color:var(--amber)">✦ ${it.reserved} res.</span>` : ''}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div class="m-price">R$${it.price.toFixed(2)}</div>
+              <div class="${pCls}" style="font-size:11px;margin-top:2px">+R$${profit.toFixed(2)}</div>
+            </div>
+          </div>
+          <div class="m-card-actions">
+            <button class="btn-sm" onclick="showQtyEdit(${it.id})" id="qty-view-btn-${it.id}">✏ Editar Qtd</button>
+            <button class="btn-sm btn-danger" onclick="removeItem(${it.id})">✕ Remover</button>
+          </div>
+          <div id="qty-edit-${it.id}-m" style="display:none">
+            <div class="qty-edit-wrap">
+              <input type="number" class="qty-input" id="qty-inp-${it.id}-m" min="${it.reserved}" value="${it.qty}">
+              <button class="btn-sm btn-confirm" onclick="saveQtyM(${it.id})">✓</button>
+              <button class="btn-sm" onclick="cancelQtyEditM(${it.id})">✕</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
       tbody.innerHTML = items.map(it => {
         const avail  = available(it);
         const cost   = it.cost ?? 0;
@@ -867,6 +1005,34 @@
       const pc = document.getElementById('pending-count');
       pc.textContent = pending.length > 0 ? pending.length + ' aguardando' : '';
 
+      // Mobile pending cards
+      const pMobile = document.getElementById('ord-pending-mobile');
+      if (pMobile) pMobile.innerHTML = pending.map(o => `
+        <div class="m-order-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="m-order-name">${o.customer}</div>
+              <div class="m-order-meta">${o.itemName} · ${o.qty} un. · R$${(o.price*o.qty).toFixed(2)}</div>
+              ${o.phone ? `<div style="font-size:12px;color:var(--muted)">📞 ${o.phone}</div>` : ''}
+              ${o.notes ? `<div style="font-size:12px;color:var(--muted)">📝 ${o.notes}</div>` : ''}
+            </div>
+            <span class="badge badge-pending" style="flex-shrink:0;margin-left:8px">Aguardando</span>
+          </div>
+          <div class="m-order-actions">
+            <button class="btn-sm btn-confirm" onclick="markPickedUp(${o.id})">✓ Retirado</button>
+            <button class="btn-sm btn-danger"  onclick="cancelOrder(${o.id})">✕ Cancelar</button>
+          </div>
+        </div>`).join('');
+
+      // Mobile done cards
+      const dMobile = document.getElementById('ord-done-mobile');
+      if (dMobile) dMobile.innerHTML = done.map(o => `
+        <div class="m-order-card">
+          <div class="m-order-name">${o.customer}</div>
+          <div class="m-order-meta">${o.itemName} · ${o.qty} un. · R$${(o.price*o.qty).toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${o.date}${o.phone ? ' · ' + o.phone : ''}${o.notes ? ' · ' + o.notes : ''}</div>
+        </div>`).join('');
+
       const pb = document.getElementById('ord-pending-body');
       const pe = document.getElementById('ord-pending-empty');
       if (pending.length === 0) { pe.style.display = 'block'; pb.innerHTML = ''; }
@@ -935,6 +1101,21 @@
     function closeModal(e) {
       if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
     }
+    function showQtyEditM(id) {
+      document.getElementById('qty-edit-' + id + '-m').style.display = 'block';
+    }
+    function cancelQtyEditM(id) {
+      document.getElementById('qty-edit-' + id + '-m').style.display = 'none';
+    }
+    function saveQtyM(id) {
+      const item = items.find(i => i.id === id); if (!item) return;
+      const newQty = parseInt(document.getElementById('qty-inp-' + id + '-m').value);
+      if (isNaN(newQty) || newQty < item.reserved)
+        { alert(`Quantidade mínima é ${item.reserved} (unidades reservadas).`); return; }
+      item.qty = newQty;
+      saveData(); renderAll(); populateOrderItemSelect();
+    }
+
     function showMsg(el, text, type) {
       el.style.color = type === 'error' ? 'var(--red)' : 'var(--green)';
       el.textContent = text;
